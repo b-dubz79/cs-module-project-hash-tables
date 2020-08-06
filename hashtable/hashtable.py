@@ -16,12 +16,16 @@ class HashTable:
     """
     A hash table that with `capacity` buckets
     that accepts string keys
-
+jj
     Implement this.
     """
 
     def __init__(self, capacity):
         # Your code here
+        # Store our array here
+        self.capacity = capacity
+        self.bucket = [None for i in range(capacity)]
+        self.length = 0
 
 
     def get_num_slots(self):
@@ -35,7 +39,7 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        return self.capacity
 
     def get_load_factor(self):
         """
@@ -44,7 +48,8 @@ class HashTable:
         Implement this.
         """
         # Your code here
-
+        # length divided by capacity
+        return self.length / self.capacity
 
     def fnv1(self, key):
         """
@@ -63,6 +68,12 @@ class HashTable:
         Implement this, and/or FNV-1.
         """
         # Your code here
+        # ord is a function that accepts a string of length 1 and returns unicode. Ex: B returns 66.
+        hash_var = 5381
+        for i in key:
+            hash_var = (hash_var * 33) + ord(i)
+        return hash_var
+           
 
 
     def hash_index(self, key):
@@ -81,9 +92,31 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
-
-
+        
+        index = self.hash_index(key)
+        new_entry = self.bucket[index]
+        
+        if new_entry is not None:
+            if new_entry.key == key:
+                new_entry.value = value
+                return
+            while new_entry.next:
+                new_entry = new_entry.next
+                if new_entry.key == key:
+                    new_entry.value = value
+                    return
+            new_entry.next = HashTableEntry(key, value)
+            self.length += 1
+            if self.get_load_factor > .7:
+                self.resize(self.capacity * 2)
+        else:
+            self.bucket[index] = HashTableEntry(key, value)
+            self.length += 1
+            if self.get_load_factor() > .7:
+                self.resize(self.capacity * 2)
+                
+        
+        
     def delete(self, key):
         """
         Remove the value stored with the given key.
@@ -93,7 +126,29 @@ class HashTable:
         Implement this.
         """
         # Your code here
+         # Step 1: get the hash
+         # Decrement the length after deletion
 
+        index = self.hash_index(key)
+        delete_entry = self.bucket[index]
+        
+        if delete_entry is not None:
+            if delete_entry.key == key:
+                
+                self.bucket[index] = delete_entry.next # this sets the NEW head
+                self.length -= 1
+                return
+            else:
+                while delete_entry.next:
+                    if delete_entry.next.key == key:
+                        delete_entry.next = delete_entry.next.next
+                        self.length -= 1
+                        return
+                    else: 
+                        delete_entry = delete_entry.next
+        print("Item wasn't found")       
+        #Step 3: use that index to access the value stored there
+        
 
     def get(self, key):
         """
@@ -103,9 +158,19 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
-
-
+        search_index = self.hash_index(key)
+        current_node = self.bucket[search_index]
+        if current_node == None:
+            return
+        elif current_node.key == key:
+            return current_node.value
+        while current_node.next:
+            current_node = current_node.next
+            if current_node.key == key:
+                return current_node.value
+        return None
+    
+        
     def resize(self, new_capacity):
         """
         Changes the capacity of the hash table and
@@ -114,12 +179,33 @@ class HashTable:
         Implement this.
         """
         # Your code here
+        old_bucket = self.bucket
+        self.bucket = [None for i in range(new_capacity)]
+        self.capacity = new_capacity
+        for head in old_bucket:
+            if head is not None:
+                self.put(head.key, head.value)
+                while head.next:
+                    head = head.next
+                    self.put(head.key, head.value)
+
+
+        
+        
+    
+
+        
+
+
+
+
 
 
 
 if __name__ == "__main__":
     ht = HashTable(8)
 
+    
     ht.put("line_1", "'Twas brillig, and the slithy toves")
     ht.put("line_2", "Did gyre and gimble in the wabe:")
     ht.put("line_3", "All mimsy were the borogoves,")
@@ -133,7 +219,6 @@ if __name__ == "__main__":
     ht.put("line_11", "So rested he by the Tumtum tree")
     ht.put("line_12", "And stood awhile in thought.")
 
-    print("")
 
     # Test storing beyond capacity
     for i in range(1, 13):
@@ -151,3 +236,34 @@ if __name__ == "__main__":
         print(ht.get(f"line_{i}"))
 
     print("")
+
+
+
+    # class LinkedList:
+    #     def __init__(self):
+    #         self.head = None
+
+    #     def find(self, value):
+    #         # start at the head
+    #         current = self.head
+            
+
+    #         # loop through the list
+    #         while current is not None:
+    #             if current.value == value:
+    #                 return current
+    #             current = current.next
+    #         # find value
+    #         # return the node
+    #         return None
+
+    #     def delete(self, value):
+    #         current = self.head
+    #         if current.value == value:
+    #             self.head = current.next
+    #             return current
+            
+
+    #     def insert_at_head(self, node):
+    #         node.next = self.head
+    #         self.head = node
